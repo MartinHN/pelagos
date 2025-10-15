@@ -13,7 +13,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
-  - _MODEPOINT_ON
+  - _PREVIEW_ON
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
@@ -82,17 +82,17 @@ Material:
     - _MinAlpha: 0.1
     - _MinPointSize: 0.2
     - _Mode: 0
-    - _ModePoint: 1
+    - _ModePoint: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _PointSize: 1
-    - _Preview: 0
+    - _Preview: 1
     - _ScreenHeight: 299
     - _ScreenWidth: 377
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TimeIn: 1
+    - _TimeIn: 0
     - _ToggleBuffer: 0
     - _UVSec: 0
     - _ZWrite: 1

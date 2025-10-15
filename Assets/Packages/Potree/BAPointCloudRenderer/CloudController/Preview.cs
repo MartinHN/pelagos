@@ -30,6 +30,7 @@ namespace BAPointCloudRenderer.CloudController
         private bool _showPoints;
         private int _pointBudget;
         public Material material;
+        public bool isV2 = true;
         private bool _createMesh = false;
         private Thread loadingThread = null;
 
@@ -131,7 +132,8 @@ namespace BAPointCloudRenderer.CloudController
 
                 if (_showPoints)
                 {
-                    Node rootNode = new Node("", metaData, metaData.boundingBox_transformed, null);
+                    Node rootNode = metaData.createRootNode();
+                    rootNode.type = 2;  //to enforce hierarchy loading in V2 format
                     CloudLoader.LoadPointsForNode(rootNode);
                     _nodes.Add(rootNode);
                     Debug.Log("loading hierarchy ");
@@ -219,7 +221,7 @@ namespace BAPointCloudRenderer.CloudController
             List<Tuple<PointCloudLoader, Vector3[], Color[]>> data = ChoosePoints();
             int processed = -1;
 #if UNITY_EDITOR
-            String baseAssetPath = "Assets/BTS/Models";
+            String baseAssetPath = "Assets";
             String assetFolderName = "previewMeshs";
             String assetMeshPath = baseAssetPath + "/" + assetFolderName + "/";
             AssetDatabase.DeleteAsset(assetMeshPath);
@@ -227,6 +229,7 @@ namespace BAPointCloudRenderer.CloudController
             string newFolderPath = AssetDatabase.GUIDToAssetPath(guid);
 
             Debug.LogWarning("ffoooooolllder" + newFolderPath);
+            Debug.LogWarning("num" + data.Count);
 #endif
             foreach (Tuple<PointCloudLoader, Vector3[], Color[]> cloud in data)
             {
@@ -348,15 +351,16 @@ namespace BAPointCloudRenderer.CloudController
                 }
             }
             //Build Vertices-Array
-            j = 0;
+            j = 0; 
             foreach (Node n in _nodes)
             {
                 Vector3[] nodeVertices = n.VerticesToStore;
                 Color[] nodeColors = n.ColorsToStore;
                 Vector3[] filteredVertices = new Vector3[assignedPointCounts[j]];
                 Color[] filteredColors = new Color[assignedPointCounts[j]];
-                int stride = n.PointCount / assignedPointCounts[j];
-                Vector3 translation = n.BoundingBox.Min().ToFloatVector();
+                int stride = assignedPointCounts[j] == 0 ? 0 : n.PointCount / assignedPointCounts[j];
+                // hack to use root node in v2
+                Vector3 translation = (isV2 ? _nodes[0] : n).BoundingBox.Min().ToFloatVector();
                 for (int newIndex = 0, oldIndex = 0; newIndex < assignedPointCounts[j]; oldIndex += stride, ++newIndex)
                 {
                     filteredVertices[newIndex] = nodeVertices[oldIndex] + translation;
