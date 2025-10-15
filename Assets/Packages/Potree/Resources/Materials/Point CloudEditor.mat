@@ -7,12 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Point Cloud
+  m_Name: Point CloudEditor
   m_Shader: {fileID: 4800000, guid: c84da476780df464db5c4d05198e7a61, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _PREVIEW_ON
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
@@ -71,7 +72,7 @@ Material:
     - _DensityCropRange: 2
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Explode: 30.3
+    - _Explode: 0
     - _FadeDistanceFeather: 5
     - _FadeDistanceRange: 999999
     - _GlossMapScale: 1
@@ -85,7 +86,7 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _PointSize: 1
-    - _Preview: 0
+    - _Preview: 1
     - _ScreenHeight: 299
     - _ScreenWidth: 377
     - _SmoothnessTextureChannel: 0

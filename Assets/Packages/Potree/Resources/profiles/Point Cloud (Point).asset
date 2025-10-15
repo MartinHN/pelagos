@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Point Cloud (Point)
   m_EditorClassIdentifier: 
   _Alpha: 1
-  _FadeDistanceRange: 0
-  _FadeDistanceFeather: 92
+  _FadeDistanceRange: 0.9
+  _FadeDistanceFeather: 49.8
   _DensityCropRange: 9999999
-  _DensityCropFeather: 100000000
-  _DensityCropMax: 999999
+  _DensityCropFeather: 999999
+  _DensityCropMax: 1e+11

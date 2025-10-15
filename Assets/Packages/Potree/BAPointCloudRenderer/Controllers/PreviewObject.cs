@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace BAPointCloudRenderer.Controllers
 {
+    
     /// <summary>
     /// Used internally for Previewing. Please don't attach.
     /// </summary>
@@ -18,7 +19,7 @@ namespace BAPointCloudRenderer.Controllers
             // NOTINBUILD
             if (Application.isPlaying)
             {
-                // Destroy(gameObject);
+                 Destroy(gameObject);
             }
         }
     }

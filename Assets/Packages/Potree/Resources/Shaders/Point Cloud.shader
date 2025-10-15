@@ -132,7 +132,7 @@
 				o.color *= smoothstep(_FadeDistanceFeather,0,d-_FadeDistanceRange);
 
 				// density crop
-				o.color *= step(smoothstep(0,_DensityCropFeather,d-_DensityCropRange)*_DensityCropMax, hash11(id));
+				// o.color *= step(smoothstep(0,_DensityCropFeather,d-_DensityCropRange)*_DensityCropMax, hash11(id));
 				if (_Preview) o.color = 1;
 				// o.color = 1;
 				// float3 p = v.position.xyz;
