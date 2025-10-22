@@ -221,8 +221,8 @@ namespace BAPointCloudRenderer.CloudController
             List<Tuple<PointCloudLoader, Vector3[], Color[]>> data = ChoosePoints();
             int processed = -1;
 #if UNITY_EDITOR
-            String baseAssetPath = "Assets";
-            String assetFolderName = "previewMeshs";
+            String baseAssetPath = "Assets";  
+            String assetFolderName = "previewMeshs_"+data[0].Item1.transform.name;
             String assetMeshPath = baseAssetPath + "/" + assetFolderName + "/";
             AssetDatabase.DeleteAsset(assetMeshPath);
             var guid = AssetDatabase.CreateFolder(baseAssetPath, assetFolderName);

@@ -66,14 +66,14 @@ Material:
     - _BumpScale: 1
     - _Circles: 0
     - _Cutoff: 0.5
-    - _DensityCropFeather: 998999
-    - _DensityCropMax: 0
+    - _DensityCropFeather: 5
+    - _DensityCropMax: 0.909
     - _DensityCropRange: 2
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Explode: 30.3
+    - _Explode: 0
     - _FadeDistanceFeather: 5
-    - _FadeDistanceRange: 999999
+    - _FadeDistanceRange: 8.17
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1

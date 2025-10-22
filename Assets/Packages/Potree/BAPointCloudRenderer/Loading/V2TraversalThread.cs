@@ -45,11 +45,12 @@ namespace BAPointCloudRenderer.Loading
                     camera = camera.transform.GetChild(0).GetComponent<Camera>();
                 }
 
-                this.screenHeight = Math.Max(1080, camera.pixelRect.height);
+                this.screenHeight = Math.Max(1920, camera.pixelRect.height);
                 // prevent super big screens that would ask too different node sizes (see minNodeSizes)
-
+                this.isMainCam = false;
                 if (camera == Camera.main)
                 {
+                    this.isMainCam = true;
                     // we use fixed field of view, so that frustum used by potree is consistent (doesnot use the one of editor Game view when in edit mode)
                     var fkO = camera.transform.Find("fakeVRCam");
                     //fake frustrum of Vive
@@ -58,7 +59,7 @@ namespace BAPointCloudRenderer.Loading
                         var fkCam = fkO?.GetComponent<Camera>();
                         fkO.localPosition = new Vector3(0, 0, 0);
                         fkCam.CopyFrom(camera);
-                        fkCam.stereoTargetEye = StereoTargetEyeMask.None;
+                        //fkCam.stereoTargetEye = StereoTargetEyeMask.None;
                         float targetFOV = 60;// 86.8f; // measured in unity , h
                         fkCam.fieldOfView = targetFOV;
                         fkCam.aspect = 1.2f;//1.06f;// camera.aspect * 2; // measured total of 1.06 // w.h
@@ -95,6 +96,8 @@ namespace BAPointCloudRenderer.Loading
             public float fieldOfView;
             public Plane[] frustum;
             public Vector3 camForward;
+
+            public bool isMainCam;
         }
         List<CamData> cams;
         private Queue<Node> toDelete;
@@ -171,21 +174,22 @@ namespace BAPointCloudRenderer.Loading
                 return -2;
 
             // Added ignore outside of frustrum to avoid queue pollution
+            int numInFrustrum = 0;
             if (!_dontCheckFrustrum)
             {
-                bool insideOneFrust = false;
                 foreach (CamData cd in localCams)
                 {
+                    // if (!cd.isMainCam) continue;
                     if (Util.IntersectsFrustum(n.BoundingBox, cd.frustum))
                     {
-                        insideOneFrust = true;
-                        break;
+                        numInFrustrum++;
                     }
 
                 }
-                if (!insideOneFrust)
+                if (numInFrustrum == 0)
                     return -1;
             }
+            else numInFrustrum = 1;
 
 
             double bestPriority = 0; //do we want to discard it fully?
@@ -206,10 +210,10 @@ namespace BAPointCloudRenderer.Loading
                     double angle = dot > 0 ? Math.Acos(dot) : Math.PI / 2f;
                     double angleWeight = angleImportance > 0 ? (Math.Abs(angle) * 1.0 / angleImportance) : 0;
                     float inFrontImportance = dot > 0 ? (_dontCheckFrustrum ? 2 : 1) : 1;
-                    double distWeight = distImportance > 0 ? distance * 1.0 / (distImportance) : 0;
+                    double distWeight = distImportance > 0 ? distance * distImportance : 0;
                     double quotient = (distImportance == 0 && angleImportance == 0) ? 1 : Math.Max(.00000000000000001, angleWeight + distWeight);
-                    double sizeWeight = sizeImportance > 0 ? sizeImportance * projectedSize : 1;
-                    double priority = cd.camWeight * inFrontImportance * sizeWeight / quotient;//+1, to prevent divsion by zero
+                    double sizeWeight = sizeImportance > 0 ? projectedSize * sizeImportance : 1;
+                    double priority = cd.camWeight * numInFrustrum * inFrontImportance * sizeWeight / quotient;//+1, to prevent divsion by zero
 
                     // #if UNITY_EDITOR
                     //                     if (!double.IsFinite(priority))

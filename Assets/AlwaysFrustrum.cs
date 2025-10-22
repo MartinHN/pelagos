@@ -6,11 +6,12 @@ using UnityEditor;
 [ExecuteInEditMode]
 public class AlwaysDrawCameraFrustum : MonoBehaviour
 {
-    public Color frustumColor = Color.white;
+    public Color frustumColor = Color.yellow;
 
 #if UNITY_EDITOR
     void OnDrawGizmos()
     {
+        if(!enabled)return;
         // Only draw frustum if the camera is not selected in the hierarchy.
         // If it is selected, Unity's default frustum drawing will handle it.
         if (Selection.activeGameObject != gameObject)

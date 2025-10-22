@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Point CloudEditor
+  m_Name: Point CloudPreview
   m_Shader: {fileID: 4800000, guid: c84da476780df464db5c4d05198e7a61, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -92,7 +92,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TimeIn: 0
+    - _TimeIn: 1
     - _ToggleBuffer: 0
     - _UVSec: 0
     - _ZWrite: 1

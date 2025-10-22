@@ -78,6 +78,8 @@ energeia_WwiseProject/energeia_WwiseProject.antoineboucherikha.validationcache
 /.utmp
 /energeia_WwiseProject
 
+Assets/previewMeshs*
+
 #Wwise
 *.akd
 *.prof

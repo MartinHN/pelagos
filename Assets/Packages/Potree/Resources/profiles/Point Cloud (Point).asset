@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0c46125254609b429f34f486c0fd903, type: 3}
   m_Name: Point Cloud (Point)
   m_EditorClassIdentifier: 
-  _Alpha: 1
-  _FadeDistanceRange: 0.9
-  _FadeDistanceFeather: 49.8
+  _Alpha: 0.166
+  _FadeDistanceRange: 0
+  _FadeDistanceFeather: 229.9
   _DensityCropRange: 9999999
   _DensityCropFeather: 999999
   _DensityCropMax: 1e+11

@@ -137,7 +137,7 @@ namespace BAPointCloudRenderer.ObjectCreation
                 }
             }
 #endif
-
+            Camera.main.farClipPlane = profile._FadeDistanceRange+ profile._FadeDistanceFeather;
             var block = new MaterialPropertyBlock();
             foreach (Renderer render in renders)
             {

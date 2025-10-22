@@ -19,7 +19,8 @@ namespace BAPointCloudRenderer.Controllers
             // NOTINBUILD
             if (Application.isPlaying)
             {
-                 Destroy(gameObject);
+               gameObject.SetActive(false);
+                //  Destroy(gameObject);
             }
         }
     }

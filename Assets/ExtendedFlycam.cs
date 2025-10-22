@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections;
-using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.Rendering;
+using BAPointCloudRenderer.CloudController;
 
 public class ExtendedFlycam : MonoBehaviour
 {
@@ -22,58 +25,202 @@ public class ExtendedFlycam : MonoBehaviour
                         End:    Toggle cursor locking to screen (you can also press Ctrl+P to toggle play mode on and off).
 	*/
 
-    public float cameraSensitivity = 90;
-    public float climbSpeed = 4;
-    public float normalMoveSpeed = 10;
-    public float slowMoveFactor = 0.25f;
-    public float fastMoveFactor = 3;
+    public float cameraSensitivity = 5;
+    private float climbSpeed = 4;
+    private float normalMoveSpeed = 100;
+      public float playingFwdSpeed = .1f;
+    private float fastMoveFactor = 3;
 
-    private float rotationX = 0.0f;
-    private float rotationY = 0.0f;
 
     bool invertX = true;
 
+    bool isCamFlipped = false;
+
+  
+    private float maxY = 7;
+    private float minY = 0;
+    
+
+    private bool isPlaying = false;
+    List<Mirror> mirrors = new List<Mirror>();
+    Camera cam;
+    Vector3 initialWorldPos;
+    Quaternion initialRotation;
+
+    Vector2 smoothXY = Vector2.zero;
+   public float smoothXYFactor = .98f;
     void Start()
     {
+        initialWorldPos = transform.position;
+        initialRotation = transform.rotation;
+        mirrors = FindObjectsByType<Mirror>(FindObjectsSortMode.InstanceID).ToList();
+        cam = GetComponent<Camera>();
         //Screen.lockCursor = true;
+        RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+
     }
 
     void Update()
     {
-        bool isLocked = Cursor.lockState != CursorLockMode.None;
-        if(isLocked)
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            rotationX += Input.GetAxis("Mouse X") * cameraSensitivity * Time.deltaTime* (invertX?-1:1);
-            rotationY += Input.GetAxis("Mouse Y") * cameraSensitivity * Time.deltaTime;
-            rotationY = Mathf.Clamp(rotationY, -90, 90);
+            bool isFull = Screen.fullScreenMode == FullScreenMode.FullScreenWindow;
+            if (isFull)
+                Screen.fullScreenMode = FullScreenMode.MaximizedWindow;
+            else
+                Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
         }
-
-        transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
-        transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
-
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-        {
-            transform.position += transform.forward * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Vertical") * Time.deltaTime;
-            transform.position += transform.right * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Horizontal") * Time.deltaTime;
+        if (Input.GetKeyDown(KeyCode.R)){
+            transform.position = initialWorldPos;
+            transform.rotation = initialRotation;
         }
-        else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-        {
-            transform.position += transform.forward * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Vertical") * Time.deltaTime;
-            transform.position += transform.right * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Horizontal") * Time.deltaTime;
-        }
-        else
-        {
-            transform.position += transform.forward * normalMoveSpeed * Input.GetAxis("Vertical") * Time.deltaTime;
-            transform.position += transform.right * normalMoveSpeed * Input.GetAxis("Horizontal") * Time.deltaTime;
-        }
-
-
-        if (Input.GetKey(KeyCode.R)) { transform.position += transform.up * climbSpeed * Time.deltaTime; }
-        if (Input.GetKey(KeyCode.F)) { transform.position -= transform.up * climbSpeed * Time.deltaTime; }
-
+        Vector3 newPos = handleNavInput();
+        applyNewPos(newPos);
+    }
+    
+    Vector3 handleNavInput()
+    {
+         bool isLocked = Cursor.lockState != CursorLockMode.None;
         if (Input.GetMouseButtonDown(0))
             Cursor.lockState = isLocked ? CursorLockMode.None : CursorLockMode.Locked;
         else if (Input.GetMouseButtonDown(1))
             invertX = !invertX;
+
+        if(Input.GetKeyDown(KeyCode.Space))
+          {
+            isPlaying = !isPlaying;
+          if(isPlaying){
+                var pos = transform.position;
+                pos.y = Mathf.Clamp(pos.y, minY, maxY);
+                transform.position = pos;
+            }
+          }
+        if (!isLocked)
+            return transform.position;
+
+        Vector3 forward = transform.localRotation * Vector3.forward;
+        float rotationX = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
+        float rotationY = Mathf.Asin(Mathf.Clamp(forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+        smoothXY.x = smoothXY.x * smoothXYFactor + (1-smoothXYFactor)*Input.GetAxis("Mouse X");
+        smoothXY.y = smoothXY.y * smoothXYFactor + (1-smoothXYFactor)*Input.GetAxis("Mouse Y");
+        rotationX +=smoothXY.x * cameraSensitivity * Time.deltaTime * (invertX ? -1 : 1);
+        rotationY += smoothXY.y * cameraSensitivity * Time.deltaTime;
+        rotationY = Mathf.Clamp(rotationY, -10, 10);
+        if (Input.GetKeyDown(KeyCode.U))
+            rotationX += 180;
+
+        transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
+        transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+        var newPos = transform.position;
+        float forwardSpeed = isPlaying? playingFwdSpeed:Input.GetAxis("Vertical");
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            newPos += transform.forward * (normalMoveSpeed * fastMoveFactor) * forwardSpeed * Time.deltaTime;
+            newPos += transform.right * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Horizontal") * Time.deltaTime* (invertX ? -1 : 1);
+        }
+        else
+        {
+            newPos += transform.forward * normalMoveSpeed * forwardSpeed * Time.deltaTime;
+            newPos += transform.right * normalMoveSpeed * Input.GetAxis("Horizontal") * Time.deltaTime* (invertX ? -1 : 1);
+        }
+
+        if (Input.GetKey(KeyCode.O)) { newPos += transform.up * climbSpeed * Time.deltaTime; }
+        if (Input.GetKey(KeyCode.L)) { newPos -= transform.up * climbSpeed * Time.deltaTime; }
+        return newPos;
+    }
+    void applyNewPos(Vector3 pos)
+    {
+        var curPos = transform.position;
+        if (curPos == pos) { return; }
+        var vel = pos - curPos;
+        // constrain height
+        pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        float heightPct = (pos.y - minY) / (maxY - minY);
+        float rangePct = .25f;
+        if (heightPct > 1 - rangePct && vel.y > 0)
+            vel.y = Mathf.Lerp(vel.y, 0, (heightPct - (1 - rangePct)) / rangePct);
+        else if (heightPct < rangePct && vel.y < 0)
+            vel.y = Mathf.Lerp(0, vel.y, 1 + (heightPct - rangePct) / rangePct);
+        pos = curPos + vel;
+        //var pos2Check = curPos + 2*vel;
+        // check mirror bounce
+        bool hasActiveCams = false;
+        foreach (var m in mirrors)
+        {
+            float oldSDist = m.plane.GetDistanceToPoint(curPos);
+            if (m.isActive())
+                hasActiveCams = true;
+            else continue;
+            float signedDist = m.plane.GetDistanceToPoint(pos);
+            if (oldSDist * signedDist == 0) Debug.LogError("collisionFailed");
+            if (oldSDist * signedDist < 0)
+            {
+                Debug.Log("collision "+m.transform.name);
+                float distOnRay;
+                var ray = new Ray(curPos, vel);
+                bool foundImpact = m.plane.Raycast(ray, out distOnRay);
+                if (!foundImpact) Debug.LogError("no impact");
+                float remainingDist = vel.magnitude - distOnRay;
+                if (remainingDist <= 0)
+                {
+                    Debug.LogError("no remaining");
+                    remainingDist = .01f;
+                }
+                var bouncedVec = Vector3.Reflect(vel.normalized * remainingDist, m.plane.normal);
+                var impactV = ray.GetPoint(distOnRay);
+                curPos = impactV + bouncedVec;
+                transform.position = curPos;
+                // TODO consider non vertical mirrors
+                float hangle = Vector3.SignedAngle(Vector3.ProjectOnPlane(vel, Vector3.up), Vector3.ProjectOnPlane(-bouncedVec, Vector3.up), Vector3.up);
+                Debug.Log(hangle);
+                transform.Rotate(Vector3.up, 180 + hangle, Space.World);
+
+                toggleFlipped();
+
+                return;
+            }
+        }
+        transform.position = pos;
+
+// if(needCamWeight)
+// {
+//             var dp = FindAnyObjectByType<DynamicPointCloudSet>();
+//             dp.mainCamWeight = hasCams
+// }
+    }
+
+    void toggleFlipped()
+    {
+        isCamFlipped = !isCamFlipped;
+        cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+        invertX = !invertX;
+    }
+    void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+    {
+        if (camera != cam) { return; }
+        if (isCamFlipped)
+        {
+          //  cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+            GL.invertCulling = true;
+        }
+    }
+
+    void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+    {
+        if (camera != cam) { return; }
+        if (isCamFlipped)
+        {
+           // cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+            GL.invertCulling = false;
+        }
+    }
+
+    void OnDestroy()
+    {
+        RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+        RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+        if (isCamFlipped)
+            toggleFlipped();
     }
 }
