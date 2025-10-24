@@ -94,6 +94,26 @@ public class Mirror : MonoBehaviour
 
         return refPlaneGO.transform.TransformPoint(loc);
     }
+
+   public bool isBehindMirror(Vector3 wp)
+    {
+       float minDistAway = 1;
+        var loc = refPlaneGO.transform.InverseTransformPoint(wp);
+        float meshFactor = usePlane ? 10 : 1;
+        if (usePlane)
+        {
+            if (loc.y > -minDistAway) return false;
+            if (Mathf.Abs(loc.x) > meshFactor/2 || Mathf.Abs(loc.z) > meshFactor/2) return false;
+            return true;
+        }
+        else
+        {
+            if (loc.z > 0) return false;
+            return false; //TODO
+        }
+
+
+    }
     public bool isActive()
     {
         return cam.gameObject.activeSelf;
@@ -148,10 +168,10 @@ public class Mirror : MonoBehaviour
 
 
         }
+        // bool isCloseEnough = Mathf.Abs(plane.GetDistanceToPoint(globCam.transform.position)) < globCam.farClipPlane;
         cam.gameObject.SetActive(numValid >= 2 &&
                                 Math.Abs(minLoc.x - maxLoc.x) > 0.0001
                                 );
-        // bool isCloseEnough = Mathf.Abs(plane.GetDistanceToPoint(globCam.transform.position)) < globCam.farClipPlane;
         if (!cam.gameObject.activeSelf) { return; }
         if (usePlane) { minLoc.y = 0; maxLoc.y = 0; }
         else { minLoc.z = 0; maxLoc.z = 0; }
@@ -161,10 +181,11 @@ public class Mirror : MonoBehaviour
         Vector3 locSize = (maxLoc - minLoc);
         if (locSize.magnitude == 0) { Debug.LogWarning("no diag"); return; }
         locSize.Scale(refPlaneGO.transform.localScale);
-        if (usePlane) locSize /= 10; //plane mesh is 10
+        float meshF = usePlane ? 10 : 1;
+        locSize /= meshF; //plane mesh is 10
         minWP = refPlaneGO.transform.TransformPoint(minLoc);
         maxWP = refPlaneGO.transform.TransformPoint(maxLoc);
-        Debug.DrawLine(minWP, maxWP, isParticipating?Color.green:Color.red);
+        Debug.DrawLine(minWP, maxWP, isParticipating ? Color.green : Color.red);
         var planeMinP = minWP; //plane.ClosestPointOnPlane(minWP);
         var planeMaxP = maxWP; //plane.ClosestPointOnPlane(maxWP);
         var wCenter = (planeMaxP + planeMinP) / 2;
@@ -178,8 +199,8 @@ public class Mirror : MonoBehaviour
         else
             scale.y = locSize.y;
         planeGO.transform.localScale = scale;
-
-         // cam.gameObject.SetActive(isCloseEnough);
+        bool isCloseEnough = (globCam.transform.position - planeGO.transform.position).magnitude < globCam.farClipPlane + locSize.magnitude * meshF / 2;
+        cam.gameObject.SetActive(isCloseEnough);
     }
 
     void updateCam()
@@ -209,7 +230,7 @@ public class Mirror : MonoBehaviour
         //cam.ResetWorldToCameraMatrix();
         cam.fieldOfView = globCam.fieldOfView;
         cam.nearClipPlane = globCam.nearClipPlane;
-       
+
         cam.aspect = globCam.aspect;
 
         cam.transform.position = destPos;
@@ -226,7 +247,7 @@ public class Mirror : MonoBehaviour
             }
             mirrorMesh.uv = meshUvs;
         }
-         cam.farClipPlane = Mathf.Max(cam.nearClipPlane+5,globCam.farClipPlane/2);
+        cam.farClipPlane = Mathf.Max(cam.nearClipPlane + 5, globCam.farClipPlane / 2);
 
         //TODO rotate clip planes
 #if false
